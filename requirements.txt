@@ -3,3 +3,4 @@ transformers
 flask
 nltk
 numpy
+requests
