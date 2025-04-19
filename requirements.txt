@@ -1,7 +1,7 @@
-torch
-transformers
-flask
-nltk
-numpy
-gunicorn
-requests
+torch==2.6.0+cpu
+transformers==4.51.3
+flask==3.1.0
+nltk==3.9.1
+numpy==2.1.3
+gunicorn==23.0.0
+requests==2.32.3
