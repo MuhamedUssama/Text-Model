@@ -3,4 +3,5 @@ transformers
 flask
 nltk
 numpy
+gunicorn
 requests
