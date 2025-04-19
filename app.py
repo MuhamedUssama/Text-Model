@@ -9,13 +9,18 @@ import nltk
 import os
 import urllib.request
 
+print("Starting app.py")
+
 # إعداد بيانات NLTK
 nltk.download('punkt')
 nltk.download('stopwords')
+print("NLTK data downloaded")
 
 app = Flask(__name__)
+print("Flask app created")
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
 
 trait_info = [
     ('A', 'Agreeableness(A)'),
@@ -26,18 +31,23 @@ trait_info = [
 ]
 trait_columns = [info[0] for info in trait_info]
 
+print("Loading tokenizer...")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+print("Tokenizer loaded")
 
+print("Loading model...")
 model = BertForSequenceClassification.from_pretrained(
     'bert-base-uncased',
     num_labels=len(trait_columns),
     problem_type="multi_label_classification"
 )
+print("Model initialized")
 
 model.config.hidden_dropout_prob = 0.4
 model.config.attention_probs_dropout_prob = 0.4
 
 model.to(device)
+print("Model moved to device")
 
 # رابط Azure Blob Storage لتحميل النموذج
 model_url = 'https://traitmodelstore.blob.core.windows.net/models/Bert_person_improve.pth?sp=r&st=2025-04-19T15:19:56Z&se=2026-06-30T22:19:56Z&spr=https&sv=2024-11-04&sr=b&sig=XugrFOLosZwvgrZR4cEyITrDbOHBE6DP62m4IFV2uEk%3D'
@@ -48,6 +58,7 @@ try:
         print("Downloading model from Azure Blob Storage...")
         urllib.request.urlretrieve(model_url, model_local_path)
         print("Download complete.")
+    print("Loading model state dict...")
     model.load_state_dict(torch.load(model_local_path, map_location=device))
     print("Model loaded successfully!")
 except Exception as e:
@@ -64,6 +75,7 @@ else:
     print("Warning: Using default thresholds [0.5].")
 
 model.eval()
+print("Model set to evaluation mode")
 
 def preprocess_input_text(text):
     text = text.lower()
@@ -124,5 +136,9 @@ def analyze_personality_api():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=8000)
